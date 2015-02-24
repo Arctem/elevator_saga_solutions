@@ -14,13 +14,24 @@
             //elevator.delivering = false;
 
             elevator.on("idle", function() {
-                if(this.currentFloor() == 0) {
-                    if(this.getPressedFloors().length > 0) {
-                        for(var j = 0; j < this.getPressedFloors().length; j++) {
-                            this.goToFloor(this.getPressedFloors()[j]);
+                if(this.currentFloor() == 0 && this.getPressedFloors().length > 0) {
+                    for(var j = 0; j < this.getPressedFloors().length; j++) {
+                        this.goToFloor(this.getPressedFloors()[j]);
+                        if(floors[j].claimed == false) {
+                            floors[j].claimed = this;
                         }
                     }
-                } else {
+                } else if(anyWaiting(floors.slice(1))) {
+                    for(var j = floors.length - 1; j > 0; j--) {
+                        if((floors[j].down || floors[j].up) && floors[j].claimed == false) {
+                            floors[j].claimed = this;
+                            this.goToFloor(j);
+                            break;
+                        }
+                    }
+                }
+
+                if(this.destinationQueue.length == 0) {
                     this.goToFloor(0);
                 }
             });
@@ -31,13 +42,21 @@
                 if(floors[floorNum].claimed == this) {
                     floors[floorNum].claimed = false;
                 }
+
+                //Check for any unqueued pressed floors
+                for(var j = 0; j < this.getPressedFloors().length; j++) {
+                    var num = this.getPressedFloors()[j];
+                    if(this.destinationQueue.indexOf(num) == -1) {
+                        this.goToFloor(num);
+                    }
+                }
             });
             elevator.on("passing_floor", function(floorNum, direction) {
-                // if(((direction == "up" && floors[floorNum].up) ||
-                //     (direction == "down" && floors[floorNum].down)) &&
-                //     this.loadFactor() < 0.5 && floors[floorNum].claimed == null) {
-                //     this.goToFloor(floorNum, true);
-                // }
+                if(((direction == "up" && floors[floorNum].up) ||
+                    (direction == "down" && floors[floorNum].down)) &&
+                    this.loadFactor() < 0.5 && floors[floorNum].claimed == false) {
+                    this.goToFloor(floorNum, true);
+                }
             });
         }
 
