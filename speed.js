@@ -67,8 +67,7 @@
             elevator.on("passing_floor", function(floorNum, direction) {
                 if((((direction == "up" && floors[floorNum].up) ||
                     (direction == "down" && floors[floorNum].down)) &&
-                    this.loadFactor() < 0.75 && floors[floorNum].claimed == false) ||
-                    this.destinationQueue.indexOf(floorNum) != -1) {
+                    this.loadFactor() < 0.5 && floors[floorNum].claimed == false)) {
 
                     while(this.destinationQueue.indexOf(floorNum) != -1) {
                         this.destinationQueue.splice(this.destinationQueue.indexOf(floorNum), 1)
